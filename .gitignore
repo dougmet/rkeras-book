@@ -2,6 +2,9 @@
 .Rhistory
 .Rapp.history
 
+*.rds
+dogscats_small/
+
 # Session Data files
 .RData
 
