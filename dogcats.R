@@ -1,5 +1,5 @@
-original_dataset_dir <- "book/dogscats/train"
-base_dir <- "book/dogscats_small"
+original_dataset_dir <- "dogscats/train"
+base_dir <- "dogscats_small"
 train_dir <- file.path(base_dir, "train")
 validation_dir <- file.path(base_dir, "validation")
 test_dir <- file.path(base_dir, "test")
@@ -11,6 +11,33 @@ test_cats_dir <- file.path(test_dir, "cats")
 test_dogs_dir <- file.path(test_dir, "dogs")
 
 library(keras)
+
+# Generators -----
+
+datagen <- image_data_generator(
+  rescale = 1/255,
+  rotation_range = 40,
+  width_shift_range = 0.2,
+  height_shift_range = 0.2,
+  shear_range = 0.2,
+  zoom_range = 0.2,
+  horizontal_flip = TRUE
+)
+test_datagen <- image_data_generator(rescale = 1/255)
+train_generator <- flow_images_from_directory(
+  train_dir,
+  datagen,
+  target_size = c(150, 150),
+  batch_size = 32,
+  class_mode = "binary"
+)
+validation_generator <- flow_images_from_directory(
+  validation_dir,
+  test_datagen,
+  target_size = c(150, 150),
+  batch_size = 32,
+  class_mode = "binary"
+)
 
 # Create Model ----
 
@@ -25,6 +52,7 @@ model <- keras_model_sequential() %>%
   layer_conv_2d(filters = 128, kernel_size = c(3, 3), activation = "relu") %>%
   layer_max_pooling_2d(pool_size = c(2, 2)) %>%
   layer_flatten() %>%
+  layer_dropout(rate = 0.5) %>%
   layer_dense(units = 512, activation = "relu") %>%
   layer_dense(units = 1, activation = "sigmoid")
 
@@ -34,4 +62,19 @@ model %>% compile(
   optimizer = optimizer_rmsprop(lr = 1e-4),
   metrics = c("acc")
 )
+
+
+
+# Run it ------
+
+history <- model %>% fit_generator(
+  train_generator,
+  steps_per_epoch = 100,
+  epochs = 100,
+  validation_data = validation_generator,
+  validation_steps = 50
+)
+
+model %>% save_model_hdf5("cats_and_dogs_small_1.h5")
+
 
