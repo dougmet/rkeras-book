@@ -1,4 +1,3 @@
-original_dataset_dir <- "dogscats/train"
 base_dir <- "dogscats_small"
 train_dir <- file.path(base_dir, "train")
 validation_dir <- file.path(base_dir, "validation")
